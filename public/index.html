@@ -1,729 +1,506 @@
 <!DOCTYPE html>
 <html>
-    <head>
-        <meta charset="utf-8" />
-        <title>Display buildings in 3D</title>
-        <meta
-            name="viewport"
-            content="initial-scale=1,maximum-scale=1,user-scalable=no"
-        />
-        <link
-            href="https://api.mapbox.com/mapbox-gl-js/v3.2.0/mapbox-gl.css"
-            rel="stylesheet"
-        />
-        <script src="https://api.mapbox.com/mapbox-gl-js/v3.2.0/mapbox-gl.js"></script>
-        <style>
-            body {
-                margin: 0;
-                padding: 0;
-            }
-            #map {
-                position: absolute;
-                top: 0;
-                bottom: 0;
-                width: 100%;
-                height: 500px;
-            }
-        </style>
-    </head>
-    <body>
-        <script src="https://unpkg.com/three@0.126.0/build/three.min.js"></script>
-        <script src="https://unpkg.com/three@0.126.0/examples/js/loaders/GLTFLoader.js"></script>
-        <div id="map"></div>
-        <script>
-            var style = {
-                version: 8,
-                sources: {
-                    countries: {
-                        type: "vector",
-                        // url: "mapbox://styles/bogdas64ua/cluvhmmg5000201qz2jzofmvz",
-                        // "url": "http://tileserver.com/layer.json",
-                        tiles: [
-                            location.origin +
-                                location.pathname +
-                                "countries/{z}/{x}/{y}.pbf",
-                        ],
-                        maxzoom: 6,
-                    },
-                },
-                glyphs:
-                    location.origin +
-                    location.pathname +
-                    "font/{fontstack}/{range}.pbf",
-                layers: [
-                    {
-                        id: "background",
-                        type: "background",
-                        paint: {
-                            "background-color": "#ddeeff",
-                        },
-                    },
-                    {
-                        id: "country-glow-outer",
-                        type: "line",
-                        source: "countries",
-                        "source-layer": "country",
-                        layout: {
-                            "line-join": "round",
-                        },
-                        paint: {
-                            "line-color": "#226688",
-                            "line-width": 5,
-                            "line-opacity": {
-                                stops: [
-                                    [0, 0],
-                                    [1, 0.1],
-                                ],
-                            },
-                        },
-                    },
-                    {
-                        id: "country-glow-inner",
-                        type: "line",
-                        source: "countries",
-                        "source-layer": "country",
-                        layout: {
-                            "line-join": "round",
-                        },
-                        paint: {
-                            "line-color": "#226688",
-                            "line-width": {
-                                stops: [
-                                    [0, 1.2],
-                                    [1, 1.6],
-                                    [2, 2],
-                                    [3, 2.4],
-                                ],
-                            },
-                            "line-opacity": 0.8,
-                        },
-                        // rainbow start
-                    },
-                    {
-                        id: "area-white",
-                        type: "fill",
-                        source: "countries",
-                        filter: ["in", "ADM0_A3", "ATA"],
-                        "source-layer": "country",
-                        paint: {
-                            "fill-color": "#F0F8FF",
-                        },
-                    },
-
-                    {
-                        id: "area-red",
-                        type: "fill",
-                        source: "countries",
-                        filter: [
-                            "in",
-                            "ADM0_A3",
-                            "AFG",
-                            "ALD",
-                            "BEN",
-                            "BLR",
-                            "BWA",
-                            "COK",
-                            "COL",
-                            "DNK",
-                            "DOM",
-                            "ERI",
-                            "FIN",
-                            "FRA",
-                            "FRO",
-                            "GIB",
-                            "GNB",
-                            "GNQ",
-                            "GRC",
-                            "GTM",
-                            "JPN",
-                            "KIR",
-                            "LKA",
-                            "MHL",
-                            "MMR",
-                            "MWI",
-                            "NCL",
-                            "OMN",
-                            "RWA",
-                            "SMR",
-                            "SVK",
-                            "SYR",
-                            "TCD",
-                            "TON",
-                            "URY",
-                            "WLF",
-                        ],
-                        "source-layer": "country",
-                        paint: {
-                            "fill-color": "#fdaf6b",
-                        },
-                    },
-                    {
-                        id: "area-orange",
-                        type: "fill",
-                        source: "countries",
-                        filter: [
-                            "in",
-                            "ADM0_A3",
-                            "AZE",
-                            "BGD",
-                            "CHL",
-                            "CMR",
-                            "CSI",
-                            "DEU",
-                            "DJI",
-                            "GUY",
-                            "HUN",
-                            "IOA",
-                            "JAM",
-                            "LBN",
-                            "LBY",
-                            "LSO",
-                            "MDG",
-                            "MKD",
-                            "MNG",
-                            "MRT",
-                            "NIU",
-                            "NZL",
-                            "PCN",
-                            "PYF",
-                            "SAU",
-                            "SHN",
-                            "STP",
-                            "TTO",
-                            "UGA",
-                            "UZB",
-                            "ZMB",
-                        ],
-                        "source-layer": "country",
-                        paint: {
-                            "fill-color": "#fdc663",
-                        },
-                    },
-                    {
-                        id: "area-yellow",
-                        type: "fill",
-                        source: "countries",
-                        filter: [
-                            "in",
-                            "ADM0_A3",
-                            "AGO",
-                            "ASM",
-                            "ATF",
-                            "BDI",
-                            "BFA",
-                            "BGR",
-                            "BLZ",
-                            "BRA",
-                            "CHN",
-                            "CRI",
-                            "ESP",
-                            "HKG",
-                            "HRV",
-                            "IDN",
-                            "IRN",
-                            "ISR",
-                            "KNA",
-                            "LBR",
-                            "LCA",
-                            "MAC",
-                            "MUS",
-                            "NOR",
-                            "PLW",
-                            "POL",
-                            "PRI",
-                            "SDN",
-                            "TUN",
-                            "UMI",
-                            "USA",
-                            "USG",
-                            "VIR",
-                            "VUT",
-                        ],
-                        "source-layer": "country",
-                        paint: {
-                            "fill-color": "#fae364",
-                        },
-                    },
-                    {
-                        id: "area-green",
-                        type: "fill",
-                        source: "countries",
-                        filter: [
-                            "in",
-                            "ADM0_A3",
-                            "ARE",
-                            "ARG",
-                            "BHS",
-                            "CIV",
-                            "CLP",
-                            "DMA",
-                            "ETH",
-                            "GAB",
-                            "GRD",
-                            "GRL",
-                            "HMD",
-                            "IND",
-                            "IOT",
-                            "IRL",
-                            "IRQ",
-                            "ITA",
-                            "KOS",
-                            "LUX",
-                            "MEX",
-                            "NAM",
-                            "NER",
-                            "PHL",
-                            "PRT",
-                            "RUS",
-                            "SEN",
-                            "SUR",
-                            "TZA",
-                            "VAT",
-                        ],
-                        "source-layer": "country",
-                        paint: {
-                            "fill-color": "#d3e46f",
-                        },
-                    },
-                    {
-                        id: "area-turquoise",
-                        type: "fill",
-                        source: "countries",
-                        filter: [
-                            "in",
-                            "ADM0_A3",
-                            "AUT",
-                            "BEL",
-                            "BHR",
-                            "BMU",
-                            "BRB",
-                            "CYN",
-                            "DZA",
-                            "EST",
-                            "FLK",
-                            "GMB",
-                            "GUM",
-                            "HND",
-                            "JEY",
-                            "KGZ",
-                            "LIE",
-                            "MAF",
-                            "MDA",
-                            "NGA",
-                            "NRU",
-                            "SLB",
-                            "SOL",
-                            "SRB",
-                            "SWZ",
-                            "THA",
-                            "TUR",
-                            "VEN",
-                            "VGB",
-                        ],
-                        "source-layer": "country",
-                        paint: {
-                            "fill-color": "#aadb78",
-                        },
-                    },
-                    {
-                        id: "area-blue",
-                        type: "fill",
-                        source: "countries",
-                        filter: [
-                            "in",
-                            "ADM0_A3",
-                            "AIA",
-                            "BIH",
-                            "BLM",
-                            "BRN",
-                            "CAF",
-                            "CHE",
-                            "COM",
-                            "CPV",
-                            "CUB",
-                            "ECU",
-                            "ESB",
-                            "FSM",
-                            "GAZ",
-                            "GBR",
-                            "GEO",
-                            "KEN",
-                            "LTU",
-                            "MAR",
-                            "MCO",
-                            "MDV",
-                            "NFK",
-                            "NPL",
-                            "PNG",
-                            "PRY",
-                            "QAT",
-                            "SLE",
-                            "SPM",
-                            "SYC",
-                            "TCA",
-                            "TKM",
-                            "TLS",
-                            "VNM",
-                            "WEB",
-                            "WSB",
-                            "YEM",
-                            "ZWE",
-                        ],
-                        "source-layer": "country",
-                        paint: {
-                            "fill-color": "#a3cec5",
-                        },
-                    },
-                    {
-                        id: "area-purple",
-                        type: "fill",
-                        source: "countries",
-                        filter: [
-                            "in",
-                            "ADM0_A3",
-                            "ABW",
-                            "ALB",
-                            "AND",
-                            "ATC",
-                            "BOL",
-                            "COD",
-                            "CUW",
-                            "CYM",
-                            "CYP",
-                            "EGY",
-                            "FJI",
-                            "GGY",
-                            "IMN",
-                            "KAB",
-                            "KAZ",
-                            "KWT",
-                            "LAO",
-                            "MLI",
-                            "MNP",
-                            "MSR",
-                            "MYS",
-                            "NIC",
-                            "NLD",
-                            "PAK",
-                            "PAN",
-                            "PRK",
-                            "ROU",
-                            "SGS",
-                            "SVN",
-                            "SWE",
-                            "TGO",
-                            "TWN",
-                            "VCT",
-                            "ZAF",
-                        ],
-                        "source-layer": "country",
-                        paint: {
-                            "fill-color": "#ceb5cf",
-                        },
-                    },
-                    {
-                        id: "area-pink",
-                        type: "fill",
-                        source: "countries",
-                        filter: [
-                            "in",
-                            "ADM0_A3",
-                            "ARM",
-                            "ATG",
-                            "AUS",
-                            "BTN",
-                            "CAN",
-                            "COG",
-                            "CZE",
-                            "GHA",
-                            "GIN",
-                            "HTI",
-                            "ISL",
-                            "JOR",
-                            "KHM",
-                            "KOR",
-                            "LVA",
-                            "MLT",
-                            "MNE",
-                            "MOZ",
-                            "PER",
-                            "SAH",
-                            "SGP",
-                            "SLV",
-                            "SOM",
-                            "TJK",
-                            "TUV",
-                            "UKR",
-                            "WSM",
-                        ],
-                        "source-layer": "country",
-                        paint: {
-                            "fill-color": "#f3c1d3",
-                        },
-                        // rainbow end
-                    },
-                    {
-                        id: "geo-lines",
-                        type: "line",
-                        source: "countries",
-                        "source-layer": "geo-lines",
-                        paint: {
-                            "line-color": "#226688",
-                            "line-width": {
-                                stops: [
-                                    [0, 0.2],
-                                    [4, 1],
-                                ],
-                            },
-                            "line-dasharray": [6, 2],
-                        },
-                    },
-                    {
-                        id: "land-border-country",
-                        type: "line",
-                        source: "countries",
-                        "source-layer": "land-border-country",
-                        paint: {
-                            "line-color": "#fff",
-                            "line-width": {
-                                base: 1.5,
-                                stops: [
-                                    [0, 0],
-                                    [1, 0.8],
-                                    [2, 1],
-                                ],
-                            },
-                        },
-                    },
-                    {
-                        id: "state",
-                        type: "line",
-                        source: "countries",
-                        "source-layer": "state",
-                        minzoom: 3,
-                        filter: ["in", "ADM0_A3", "USA", "CAN", "AUS"],
-                        paint: {
-                            "line-color": "#226688",
-                            "line-opacity": 0.25,
-                            "line-dasharray": [6, 2, 2, 2],
-                            "line-width": 1.2,
-                        },
-                        // LABELS
-                    },
-                    {
-                        id: "country-abbrev",
-                        type: "symbol",
-                        source: "countries",
-                        "source-layer": "country-name",
-                        minzoom: 1.8,
-                        maxzoom: 3,
-                        layout: {
-                            "text-field": "{ABBREV}",
-                            "text-font": ["Open Sans Semibold"],
-                            "text-transform": "uppercase",
-                            "text-max-width": 20,
-                            "text-size": {
-                                stops: [
-                                    [3, 10],
-                                    [4, 11],
-                                    [5, 12],
-                                    [6, 16],
-                                ],
-                            },
-                            "text-letter-spacing": {
-                                stops: [
-                                    [4, 0],
-                                    [5, 1],
-                                    [6, 2],
-                                ],
-                            },
-                            "text-line-height": {
-                                stops: [
-                                    [5, 1.2],
-                                    [6, 2],
-                                ],
-                            },
-                        },
-                        paint: {
-                            "text-halo-color": "#fff",
-                            "text-halo-width": 1.5,
-                        },
-                    },
-                    {
-                        id: "country-name",
-                        type: "symbol",
-                        source: "countries",
-                        "source-layer": "country-name",
-                        minzoom: 3,
-                        layout: {
-                            "text-field": "{NAME}",
-                            "text-font": ["Open Sans Semibold"],
-                            "text-transform": "uppercase",
-                            "text-max-width": 20,
-                            "text-size": {
-                                stops: [
-                                    [3, 10],
-                                    [4, 11],
-                                    [5, 12],
-                                    [6, 16],
-                                ],
-                            },
-                        },
-                        paint: {
-                            "text-halo-color": "#fff",
-                            "text-halo-width": 1.5,
-                        },
-                    },
-                    {
-                        id: "geo-lines-lables",
-                        type: "symbol",
-                        source: "countries",
-                        "source-layer": "geo-lines",
-                        minzoom: 1,
-                        layout: {
-                            "text-field": "{DISPLAY}",
-                            "text-font": ["Open Sans Semibold"],
-                            "text-offset": [0, 1],
-                            "symbol-placement": "line",
-                            "symbol-spacing": 600,
-                            "text-size": 9,
-                        },
-                        paint: {
-                            "text-color": "#226688",
-                            "text-halo-width": 1.5,
-                        },
-                    },
+  <head>
+    <meta charset="utf-8" />
+    <title>Display buildings in 3D</title>
+    <meta
+      name="viewport"
+      content="initial-scale=1,maximum-scale=1,user-scalable=no"
+    />
+    <link
+      href="https://api.mapbox.com/mapbox-gl-js/v3.2.0/mapbox-gl.css"
+      rel="stylesheet"
+    />
+    <script src="https://api.mapbox.com/mapbox-gl-js/v3.2.0/mapbox-gl.js"></script>
+    <style>
+      body {
+        margin: 0;
+        padding: 0;
+      }
+      #map {
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        width: 100%;
+        height: 100%;
+      }
+    </style>
+  </head>
+  <body>
+    <script src="https://unpkg.com/three@0.126.0/build/three.min.js"></script>
+    <script src="https://unpkg.com/three@0.126.0/examples/js/loaders/GLTFLoader.js"></script>
+    <div id="map"></div>
+    <script>
+      mapboxgl.accessToken = "NOT-REQUIRED-WITH-YOUR-VECTOR-TILES-DATA";
+      const map = new mapboxgl.Map({
+        style: {
+          version: 8,
+          sources: {
+            "custom-tiles": {
+              type: "vector",
+              tiles: ["http://localhost:8080/data/v3/{z}/{x}/{y}.pbf"],
+              minzoom: 0,
+              maxzoom: 14,
+            },
+          },
+          layers: [
+            {
+              id: "background",
+              type: "background",
+              paint: {
+                "background-color": "#8b8b8b",
+              },
+            },
+            {
+              id: "country-glow-inner",
+              type: "line",
+              source: "custom-tiles",
+              "source-layer": "boundary",
+              layout: {
+                "line-join": "round",
+              },
+              paint: {
+                "line-emissive-strength": 1,
+                "line-color": "#80cbc4",
+                "line-width": [
+                  "interpolate",
+                  ["linear"],
+                  ["zoom"],
+                  3,
+                  0.5,
+                  12,
+                  2,
                 ],
-            };
-            mapboxgl.accessToken = "NOT-REQUIRED-WITH-YOUR-VECTOR-TILES-DATA";
-            const map = new mapboxgl.Map({
-                // Choose from Mapbox's core styles, or make your own style with Mapbox Studio
-                style: style,
-                // style: "mapbox://styles/mapbox/light-v11",
-                center: [148.9819, -35.3981],
-                zoom: 15.5,
-                pitch: 45,
-                bearing: -17.6,
-                container: "map",
-            });
+                "line-dasharray": [10, 0],
+              },
 
-            // parameters to ensure the model is georeferenced correctly on the map
-            const modelOrigin = [148.9819, -35.39847];
-            const modelAltitude = 0;
-            const modelRotate = [Math.PI / 2, 0, 0];
-
-            const modelAsMercatorCoordinate =
-                mapboxgl.MercatorCoordinate.fromLngLat(
-                    modelOrigin,
-                    modelAltitude
-                );
-
-            // transformation parameters to position, rotate and scale the 3D model onto the map
-            const modelTransform = {
-                translateX: modelAsMercatorCoordinate.x,
-                translateY: modelAsMercatorCoordinate.y,
-                translateZ: modelAsMercatorCoordinate.z,
-                rotateX: modelRotate[0],
-                rotateY: modelRotate[1],
-                rotateZ: modelRotate[2],
-                /* Since the 3D model is in real world meters, a scale transform needs to be
-                 * applied since the CustomLayerInterface expects units in MercatorCoordinates.
-                 */
-                scale: modelAsMercatorCoordinate.meterInMercatorCoordinateUnits(),
-            };
-
-            const THREE = window.THREE;
-
-            // configuration of the custom layer for a 3D model per the CustomLayerInterface
-            const customLayer = {
-                id: "3d-model",
-                type: "custom",
-                renderingMode: "3d",
-                onAdd: function (map, gl) {
-                    this.camera = new THREE.Camera();
-                    this.scene = new THREE.Scene();
-
-                    // create two three.js lights to illuminate the model
-                    const directionalLight = new THREE.DirectionalLight(
-                        0xffffff
-                    );
-                    directionalLight.position.set(0, -70, 100).normalize();
-                    this.scene.add(directionalLight);
-
-                    const directionalLight2 = new THREE.DirectionalLight(
-                        0xffffff
-                    );
-                    directionalLight2.position.set(0, 70, 100).normalize();
-                    this.scene.add(directionalLight2);
-
-                    // use the three.js GLTF loader to add the 3D model to the three.js scene
-                    const loader = new THREE.GLTFLoader();
-                    loader.load("futuristic_building.glb", (gltf) => {
-                        gltf.scene.scale.set(4, 4, 4);
-                        this.scene.add(gltf.scene);
-                    });
-                    // this.map = map;
-
-                    // use the Mapbox GL JS map canvas for three.js
-                    this.renderer = new THREE.WebGLRenderer({
-                        canvas: map.getCanvas(),
-                        context: gl,
-                        antialias: true,
-                    });
-
-                    this.renderer.autoClear = false;
-                },
-                render: function (gl, matrix) {
-                    const rotationX = new THREE.Matrix4().makeRotationAxis(
-                        new THREE.Vector3(1, 0, 0),
-                        modelTransform.rotateX
-                    );
-                    const rotationY = new THREE.Matrix4().makeRotationAxis(
-                        new THREE.Vector3(0, 1, 0),
-                        modelTransform.rotateY
-                    );
-                    const rotationZ = new THREE.Matrix4().makeRotationAxis(
-                        new THREE.Vector3(0, 0, 1),
-                        modelTransform.rotateZ
-                    );
-
-                    const m = new THREE.Matrix4().fromArray(matrix);
-                    const l = new THREE.Matrix4()
-                        .makeTranslation(
-                            modelTransform.translateX,
-                            modelTransform.translateY,
-                            modelTransform.translateZ
-                        )
-                        .scale(
-                            new THREE.Vector3(
-                                modelTransform.scale,
-                                -modelTransform.scale,
-                                modelTransform.scale
-                            )
-                        )
-                        .multiply(rotationX)
-                        .multiply(rotationY)
-                        .multiply(rotationZ);
-
-                    this.camera.projectionMatrix = m.multiply(l);
-                    this.renderer.resetState();
-
-                    this.renderer.render(this.scene, this.camera);
-                    // this.map.triggerRepaint();
-                },
-                filter: [
-                    "==",
-                    ["geometry", "coordinates"],
-                    [148.9819, -35.39847],
+              // rainbow start
+            },
+            {
+              id: "building",
+              type: "fill-extrusion",
+              source: "custom-tiles",
+              "source-layer": "building",
+              paint: {
+                "fill-extrusion-color": [
+                  "case",
+                  ["boolean", ["get", "hide_3d"], true],
+                  "transparent",
+                  ["get", "colour"],
                 ],
-            };
+                "fill-extrusion-height": ["get", "render_height"],
+                "fill-extrusion-base": ["get", "render_min_height"],
+                "fill-extrusion-opacity": 0.6,
+              },
+              minzoom: 13,
+              maxzoom: 20,
+            },
+            {
+              filter: [
+                "all",
+                ["==", "$type", "LineString"],
+                ["==", "brunnel", "tunnel"],
+                ["==", "class", "transit"],
+              ],
+              id: "tunnel_railway_transit",
+              layout: {
+                "line-cap": "butt",
+                "line-join": "miter",
+              },
+              minzoom: 0,
+              paint: {
+                "line-color": "hsl(34, 12%, 66%)",
+                "line-dasharray": [3, 3],
+                "line-opacity": {
+                  base: 1,
+                  stops: [
+                    [11, 0],
+                    [16, 1],
+                  ],
+                },
+              },
+              source: "custom-tiles",
+              "source-layer": "transportation",
+              type: "line",
+            },
+            {
+              filter: [
+                "all",
+                ["==", "class", "transit"],
+                ["!=", "brunnel", "tunnel"],
+              ],
+              id: "railway-transit",
+              paint: {
+                "line-color": "hsl(34, 12%, 66%)",
+                "line-opacity": {
+                  base: 1,
+                  stops: [
+                    [11, 0],
+                    [16, 1],
+                  ],
+                },
+              },
+              source: "custom-tiles",
+              "source-layer": "transportation",
+              type: "line",
+            },
+            {
+              filter: ["==", "class", "rail"],
+              id: "railway",
+              paint: {
+                "line-color": "hsl(34, 12%, 66%)",
+                "line-opacity": {
+                  base: 1,
+                  stops: [
+                    [11, 0],
+                    [16, 1],
+                  ],
+                },
+              },
+              source: "custom-tiles",
+              "source-layer": "transportation",
+              type: "line",
+            },
+            {
+              filter: ["==", "subclass", "ice_shelf"],
+              id: "landcover-ice-shelf",
+              paint: {
+                "fill-color": "hsl(47, 26%, 88%)",
+                "fill-opacity": 0.8,
+              },
+              source: "custom-tiles",
+              "source-layer": "landcover",
+              type: "fill",
+            },
 
-            map.on("style.load", () => {
-                // Insert the layer beneath any symbol layer.
-                const layers = map.getStyle().layers;
+            {
+              filter: ["==", "subclass", "glacier"],
+              id: "landcover-glacier",
+              paint: {
+                "fill-color": "hsl(47, 22%, 94%)",
+                "fill-opacity": {
+                  base: 1,
+                  stops: [
+                    [0, 1],
+                    [8, 0.5],
+                  ],
+                },
+              },
+              source: "custom-tiles",
+              "source-layer": "landcover",
+              type: "fill",
+            },
+            {
+              filter: ["all", ["in", "class", "sand"]],
+              id: "landcover_sand",
+              metadata: {},
+              paint: {
+                "fill-antialias": false,
+                "fill-color": "rgba(232, 214, 38, 1)",
+                "fill-opacity": 0.3,
+              },
+              source: "custom-tiles",
+              "source-layer": "landcover",
+              type: "fill",
+            },
+            // {
+            //   id: "landcover",
+            //   type: "fill",
+            //   source: "custom-tiles",
+            //   "source-layer": "landcover",
+            //   paint: {
+            //     "fill-color": [
+            //       "match",
+            //       ["get", "class"],
+            //       "water",
+            //       "blue",
+            //       "forest",
+            //       "green",
+            //       "urban",
+            //       "gray",
+            //       /* Add more class-color pairs as needed */
+            //       "transparent" /* Default color */,
+            //     ],
+            //     "fill-opacity": 0.7,
+            //   },
+            //   minzoom: 7,
+            //   maxzoom: 14,
+            // },
 
-                map.addLayer(customLayer);
-            });
-        </script>
-    </body>
+            // {
+            //   id: "landuse",
+            //   type: "fill",
+            //   source: "custom-tiles",
+            //   "source-layer": "landuse",
+            //   minzoom: 5,
+            //   filter: [
+            //     "all",
+            //     ["\u003E=", ["to-number", ["get", "sizerank"]], 0],
+            //     [
+            //       "match",
+            //       ["get", "class"],
+            //       [
+            //         "agriculture",
+            //         "wood",
+            //         "grass",
+            //         "scrub",
+            //         "park",
+            //         "airport",
+            //         "glacier",
+            //         "pitch",
+            //         "sand",
+            //       ],
+            //       true,
+            //       "residential",
+            //       ["step", ["zoom"], true, 12, false],
+            //       ["facility", "industrial"],
+            //       ["step", ["zoom"], false, 12, true],
+            //       "cemetery",
+            //       true,
+            //       "school",
+            //       true,
+            //       "hospital",
+            //       true,
+            //       "commercial_area",
+            //       true,
+            //       false,
+            //     ],
+            //     [
+            //       "\u003C=",
+            //       [
+            //         "-",
+            //         ["to-number", ["get", "sizerank"]],
+            //         [
+            //           "interpolate",
+            //           ["exponential", 1.5],
+            //           ["zoom"],
+            //           12,
+            //           0,
+            //           18,
+            //           14,
+            //         ],
+            //       ],
+            //       14,
+            //     ],
+            //   ],
+            //   layout: {},
+            //   paint: {
+            //     "fill-emissive-strength": 0.25,
+            //     "fill-color": [
+            //       "interpolate",
+            //       ["linear"],
+            //       ["measure-light", "brightness"],
+            //       0.1,
+            //       [
+            //         "match",
+            //         ["get", "class"],
+            //         "wood",
+            //         "hsla(115, 55%, 74%, 0.8)",
+            //         "scrub",
+            //         "hsla(110, 52%, 82%, 0.6)",
+            //         "agriculture",
+            //         "hsla(110, 55%, 88%, 0.6)",
+            //         "park",
+            //         "hsl(110, 60%, 80%)",
+            //         "grass",
+            //         "hsla(110, 55%, 88%, 0.6)",
+            //         "airport",
+            //         "hsl(225, 35%, 70%)",
+            //         "cemetery",
+            //         "hsl(110, 30%, 75%)",
+            //         "glacier",
+            //         "hsl(200, 70%, 95%)",
+            //         "hospital",
+            //         "hsl(0, 30%, 70%)",
+            //         "pitch",
+            //         "hsl(100, 70%, 80%)",
+            //         "sand",
+            //         "hsl(52, 65%, 75%)",
+            //         "school",
+            //         "hsl(40, 10%, 60%)",
+            //         "commercial_area",
+            //         "hsl(324, 27%, 70%)",
+            //         "residential",
+            //         "hsl(20, 7%, 97%)",
+            //         ["facility", "industrial"],
+            //         "hsl(230, 20%, 70%)",
+            //         "hsl(20, 22%, 86%)",
+            //       ],
+            //       0.4,
+            //       [
+            //         "match",
+            //         ["get", "class"],
+            //         "wood",
+            //         "hsla(115, 55%, 74%, 0.8)",
+            //         "scrub",
+            //         "hsla(110, 52%, 82%, 0.6)",
+            //         "agriculture",
+            //         "hsla(110, 55%, 88%, 0.6)",
+            //         "park",
+            //         "hsl(110, 60%, 80%)",
+            //         "grass",
+            //         "hsla(110, 55%, 88%, 0.6)",
+            //         "airport",
+            //         "hsl(225, 60%, 92%)",
+            //         "cemetery",
+            //         "hsl(110, 48%, 85%)",
+            //         "glacier",
+            //         "hsl(200, 70%, 90%)",
+            //         "hospital",
+            //         "hsl(0, 50%, 92%)",
+            //         "pitch",
+            //         "hsl(100, 70%, 85%)",
+            //         "sand",
+            //         "hsl(52, 65%, 86%)",
+            //         "school",
+            //         "hsl(40, 50%, 88%)",
+            //         "commercial_area",
+            //         "hsl(24, 100%, 94%)",
+            //         "residential",
+            //         "hsl(20, 7%, 97%)",
+            //         ["facility", "industrial"],
+            //         "hsl(230, 20%, 90%)",
+            //         "hsl(20, 22%, 86%)",
+            //       ],
+            //     ],
+            //     "fill-opacity": [
+            //       "interpolate",
+            //       ["linear"],
+            //       ["zoom"],
+            //       5,
+            //       0,
+            //       6,
+            //       [
+            //         "match",
+            //         ["get", "class"],
+            //         ["residential", "airport"],
+            //         0.8,
+            //         0.2,
+            //       ],
+            //       10,
+            //       [
+            //         "match",
+            //         ["get", "class"],
+            //         ["residential"],
+            //         0,
+            //         ["grass", "scrub", "glacier", "pitch", "sand", "airport"],
+            //         1,
+            //         [
+            //           "interpolate",
+            //           ["linear"],
+            //           ["measure-light", "brightness"],
+            //           0.1,
+            //           0.8,
+            //           0.4,
+            //           1,
+            //         ],
+            //       ],
+            //     ],
+            //     "fill-outline-color": "hsla(0, 0%, 0%,0)",
+            //   },
+            // },
+
+            {
+              id: "park",
+              type: "fill",
+              source: "custom-tiles",
+              "source-layer": "park",
+              paint: {
+                "fill-color": "green" /* You can adjust the color here */,
+                "fill-opacity": 0.5,
+              },
+              minzoom: 4,
+              maxzoom: 20,
+            },
+            {
+              filter: [
+                "all",
+                ["==", "$type", "Polygon"],
+                ["!=", "intermittent", 1],
+              ],
+              id: "water",
+              paint: {
+                "fill-color": "hsl(205, 56%, 73%)",
+              },
+              source: "custom-tiles",
+              "source-layer": "water",
+              type: "fill",
+            },
+            {
+              id: "waterway",
+              type: "line",
+              source: "custom-tiles",
+              "source-layer": "waterway",
+              paint: {
+                "line-color": "#80cbc4" /* You can adjust the color here */,
+                "line-width": 2,
+              },
+              minzoom: 0,
+              maxzoom: 20,
+            },
+            {
+              id: "transportation",
+              type: "line",
+              source: "custom-tiles",
+              "source-layer": "transportation",
+              paint: {
+                "line-color": "#424242" /* Adjust the color here */,
+                "line-width": 2,
+              },
+              minzoom: 0,
+              maxzoom: 20,
+            },
+
+            {
+              filter: [
+                "all",
+                ["==", "$type", "LineString"],
+                ["in", "class", "path", "track"],
+              ],
+              id: "road_path",
+              layout: {
+                "line-cap": "square",
+                "line-join": "bevel",
+              },
+              paint: {
+                "line-color": "hsl(0, 0%, 97%)",
+                "line-dasharray": [1, 1],
+                "line-width": {
+                  base: 1.55,
+                  stops: [
+                    [4, 0.25],
+                    [20, 10],
+                  ],
+                },
+              },
+              source: "custom-tiles",
+              "source-layer": "transportation",
+              type: "line",
+            },
+
+            {
+              id: "custom-tiles",
+              type: "fill",
+              source: "custom-tiles",
+              "source-layer": "custom-tile", // Specify your source layer here if applicable
+              paint: {
+                // Add your basic styles here
+                "fill-color": "#ff0000", // Not need?
+              },
+            },
+          ],
+        },
+        center: [12.564834208211984, 55.672547203742845],
+        zoom: 15,
+        pitch: 45,
+        bearing: -17.6,
+        container: "map",
+      });
+
+      map.on("style.load", () => {
+        // Insert the layer beneath any symbol layer.
+        const layers = map.getStyle().layers;
+      });
+    </script>
+  </body>
 </html>
